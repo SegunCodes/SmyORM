@@ -1,0 +1,30 @@
+{
+    "name": "seguncodes/smyorm",
+    "keywords": [
+		"smyphp",
+		"php orm",
+        "smyorm"
+	],
+	"type": "project",
+    "description": "SmyORM is a PHP Object-relational mapping (ORM) that allows developers to write code in simple programming languages of their choice instead of using SQL to access, add, update, and delete data and schemas in the respective database.",
+	"license": "MIT",
+	"minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "SmyORM\\SmyORM\\": "src/"
+        }
+    },
+    "repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/SegunCodes/smyorm"
+		}
+	],
+    "authors": [
+        {
+            "name": "Olusegun Joe-Alabi",
+            "email": "shegstix64@gmail.com",
+            "homepage": "https://twitter.com/dreal_olusegun"
+        }
+    ]
+}
