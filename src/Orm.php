@@ -5,7 +5,7 @@ namespace SmyORM\SmyORM;
  * SmyORM - SmyORM is a PHP Object-relational mapping (ORM)
  * @author SegunCodes
 */ 
-class Orm{
+abstract class Orm{
     private $db;
 
     public function __construct(\PDO $db) {

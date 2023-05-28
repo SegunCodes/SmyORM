@@ -26,5 +26,8 @@
             "email": "shegstix64@gmail.com",
             "homepage": "https://twitter.com/dreal_olusegun"
         }
-    ]
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "10.2.x-dev"
+    }
 }
