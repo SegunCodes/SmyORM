@@ -37,7 +37,7 @@ abstract class Orm{
             $stmt->bindValue(":$key", $item);
         }
         $stmt->execute();
-        return $stmt->fetchObject(static::class);
+        return $stmt->fetchObject();
     }
 
     public function findOneOrWhere($where, $orWhere){
@@ -54,7 +54,7 @@ abstract class Orm{
             $stmt->bindValue(":$keys", $items);
         }
         $stmt->execute();
-        return $stmt->fetchObject(static::class);
+        return $stmt->fetchObject();
     }
 
     public function findAll(){
@@ -76,22 +76,32 @@ abstract class Orm{
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function findAllOrWhere($where, $orWhere){
+    public function findAllOrWhere($where, $orWhere) {
         $tableName = static::tableName();
-        $attributes = array_keys($where);
-        $orpart = array_keys($orWhere); 
-        $sql2 = implode(" AND ", array_map(fn($or) => "$or = :$or", $orpart));
-        $sql = implode(" AND ", array_map(fn($attr) => "$attr = :$attr", $attributes));
-        $stmt = $this->prepare("SELECT * FROM $tableName WHERE $sql or $sql2 ORDER BY id DESC");
-        foreach ($where as $key => $item) {
-            $stmt->bindValue(":$key", $item);
+        $whereConditions = implode(" AND ", array_map(fn($attr) => "$attr = :where_$attr", array_keys($where)));
+        $orWhereConditions = implode(" OR ", array_map(fn($attr) => "$attr = :orWhere_$attr", array_keys($orWhere)));
+        $sql = "SELECT * FROM $tableName";
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE $whereConditions";
         }
-        foreach ($orWhere as $keys => $items) {
-            $stmt->bindValue(":$keys", $items);
+        if (!empty($orWhereConditions)) {
+            if (!empty($whereConditions)) {
+                $sql .= " OR $orWhereConditions";
+            } else {
+                $sql .= " WHERE $orWhereConditions";
+            }
+        }
+        $stmt = $this->prepare($sql);
+        foreach ($where as $key => $value) {
+            $stmt->bindValue(":where_$key", $value);
+        }
+        foreach ($orWhere as $key => $value) {
+            $stmt->bindValue(":orWhere_$key", $value);
         }
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+    
 
     public function count(){
         $tableName = static::tableName();
@@ -114,16 +124,25 @@ abstract class Orm{
 
     public function countOrWhere($where, $orWhere){
         $tableName = static::tableName();
-        $attributes = array_keys($where);
-        $orpart = array_keys($orWhere); 
-        $sql2 = implode(" AND ", array_map(fn($or) => "$or = :$or", $orpart));
-        $sql = implode(" AND ", array_map(fn($attr) => "$attr = :$attr", $attributes));
-        $stmt = $this->prepare("SELECT count(*) FROM $tableName WHERE $sql OR $sql2");
-        foreach ($where as $key => $item) {
-            $stmt->bindValue(":$key", $item);
+        $whereConditions = implode(" AND ", array_map(fn($attr) => "$attr = :where_$attr", array_keys($where)));
+        $orWhereConditions = implode(" OR ", array_map(fn($attr) => "$attr = :orWhere_$attr", array_keys($orWhere)));
+        $sql = "SELECT count(*) FROM $tableName";
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE $whereConditions";
         }
-        foreach ($orWhere as $keys => $items) {
-            $stmt->bindValue(":$keys", $items);
+        if (!empty($orWhereConditions)) {
+            if (!empty($whereConditions)) {
+                $sql .= " OR $orWhereConditions";
+            } else {
+                $sql .= " WHERE $orWhereConditions";
+            }
+        }
+        $stmt = $this->prepare($sql);
+        foreach ($where as $key => $value) {
+            $stmt->bindValue(":where_$key", $value);
+        }
+        foreach ($orWhere as $key => $value) {
+            $stmt->bindValue(":orWhere_$key", $value);
         }
         $stmt->execute();
         return $stmt->fetchColumn();
@@ -142,16 +161,26 @@ abstract class Orm{
 
     public function deleteOrWhere($where, $orWhere){
         $tableName = static::tableName();
-        $attributes = array_keys($where);
-        $orpart = array_keys($orWhere); 
-        $sql2 = implode(" AND ", array_map(fn($or) => "$or = :$or", $orpart));
-        $sql = implode(" AND ", array_map(fn($attr) => "$attr = :$attr", $attributes));
-        $stmt = $this->prepare("DELETE FROM $tableName WHERE $sql OR $sql2");
-        foreach ($where as $key => $item) {
-            $stmt->bindValue(":$key", $item);
+        $whereConditions = implode(" AND ", array_map(fn($attr) => "$attr = :where_$attr", array_keys($where)));
+        $orWhereConditions = implode(" OR ", array_map(fn($attr) => "$attr = :orWhere_$attr", array_keys($orWhere)));
+        $sql = "DELETE FROM $tableName";
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE $whereConditions";
         }
-        foreach ($orWhere as $keys => $items) {
-            $stmt->bindValue(":$keys", $items);
+        if (!empty($orWhereConditions)) {
+            if (!empty($whereConditions)) {
+                $sql .= " OR $orWhereConditions";
+            } else {
+                $sql .= " WHERE $orWhereConditions";
+            }
+        }
+        
+        $stmt = $this->prepare($sql);
+        foreach ($where as $key => $value) {
+            $stmt->bindValue(":where_$key", $value);
+        }
+        foreach ($orWhere as $key => $value) {
+            $stmt->bindValue(":orWhere_$key", $value);
         }
         return $stmt->execute();
     }
@@ -172,27 +201,44 @@ abstract class Orm{
         return $stmt->execute();
     }
 
-    public function updateOrWhere($data, $where, $orWhere){
+    public function updateOrWhere($data, $where, $orWhere) {
         $tableName = static::tableName();
-        $attributes = array_keys($where);
         $set = array_keys($data);
-        $orpart = array_keys($orWhere); 
-        $sql2 = implode(" AND ", array_map(fn($or) => "$or = :$or", $orpart));
+        $whereConditions = implode(" AND ", array_map(fn($attr) => "$attr = :where_$attr", array_keys($where)));
+        $orWhereConditions = implode(" OR ", array_map(fn($attr) => "$attr = :orWhere_$attr", array_keys($orWhere)));
         $setData = implode(", ", array_map(fn($d) => "$d = :$d", $set));
-        $sql = implode(" AND ", array_map(fn($attr) => "$attr = :$attr", $attributes));
-        $stmt = $this->prepare("UPDATE $tableName SET $setData WHERE $sql or $sql2");
-        foreach ($data as $keys => $items) {
-            $stmt->bindValue(":$keys", $items);
+        
+        $sql = "UPDATE $tableName SET $setData";
+        
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE $whereConditions";
         }
-        foreach ($where as $key => $item) {
-            $stmt->bindValue(":$key", $item);
+        
+        if (!empty($orWhereConditions)) {
+            if (!empty($whereConditions)) {
+                $sql .= " OR $orWhereConditions";
+            } else {
+                $sql .= " WHERE $orWhereConditions";
+            }
         }
-        foreach ($orWhere as $keys => $items) {
-            $stmt->bindValue(":$keys", $items);
+        
+        $stmt = $this->prepare($sql);
+        
+        foreach ($data as $key => $value) {
+            $stmt->bindValue(":$key", $value);
         }
+        
+        foreach ($where as $key => $value) {
+            $stmt->bindValue(":where_$key", $value);
+        }
+        
+        foreach ($orWhere as $key => $value) {
+            $stmt->bindValue(":orWhere_$key", $value);
+        }
+        
         return $stmt->execute();
     }
-
+    
     public function prepare($sql){
         return $this->db->prepare($sql);
     }
